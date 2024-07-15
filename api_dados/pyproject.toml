@@ -1,0 +1,45 @@
+[tool.poetry]
+name = "api-dados"
+version = "0.1.0"
+description = ""
+authors = ["Mauricio <mauricio.pozzebon@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "3.12.*"
+fastapi = "^0.111.0"
+faker = "^26.0.0"
+pytz = "^2024.1"
+ipykernel = "^6.29.5"
+requests = "^2.32.3"
+pandas = "^2.2.2"
+s3fs = "^2024.6.1"
+pyarrow = "^16.1.0"
+datetime = "^5.5"
+
+
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.5.2"
+taskipy = "^1.13.0"
+
+[tool.ruff]
+line-length = 79
+
+[tool.ruff.lint]
+preview = true
+select = ['I', 'F', 'E', 'W', 'PL', 'PT']
+
+[tool.ruff.format]
+preview = true
+quote-style = 'single'
+
+[tool.taskipy.tasks]
+lint = 'ruff check . && ruff check . --diff'
+format = 'ruff check . --fix && ruff format .'
+run = 'fastapi dev api_dados/app.py'
+test = 'pytest -s -x --cov=fast_zero -vv'
+post_test = 'coverage html'
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
