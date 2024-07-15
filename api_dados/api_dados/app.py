@@ -1,17 +1,15 @@
+import random
+import uuid
+from collections import Counter
+from datetime import datetime
+from random import choice
+
+import pytz
+from faker import Faker
 from fastapi import FastAPI, Path
 
-
-from collections import Counter
-from faker import Faker
-import random
-from random import choice
-from datetime import datetime
-import pytz
-import uuid
-
-
-app = FastAPI(title = 'Gerador de Dados (faker)',
-description = '''API que gera dados fictícios de vendas, clientes e produtos para 
+app = FastAPI(title='Gerador de Dados (faker)',
+description='''API que gera dados fictícios de vendas, clientes e produtos para 
 um "mercadinho de bairro" utilizando o pacote **faker**.
 
 O *endpoint* **/vendas** deve ser usado observando o seguinte cenário de negócio:
@@ -31,10 +29,11 @@ Os *endpoints* **/clientes** e **/itens** geram uma base aleatória de clientes 
 
 Veja o código no [GitHub](https://github.com/MauricioPozzebon/api-dados), meu [portfólio](https://mauricio-pozzebon.netlify.app/)
 e [linkedin](https://www.linkedin.com/in/mauriciopozzebon/).
-''')  
+''')
 
-@app.get('/vendas/{seed}')  
-def vendas(seed: int = Path(..., description="Semente aleatória")): 
+
+@app.get('/vendas/{seed}')
+def vendas(seed: int = Path(..., description="Semente aleatória")):
     # Definindo a seed para garantir resultados replicáveis
     SEED = seed
 
@@ -61,7 +60,7 @@ def vendas(seed: int = Path(..., description="Semente aleatória")):
     # Gerar 200 clientes
     for _ in range(200):
         cliente = {
-            "id": gerar_id_unico(), 
+            "id": gerar_id_unico(),
             "nome": fake.name()
         }
         clientes.append(cliente)
@@ -69,9 +68,6 @@ def vendas(seed: int = Path(..., description="Semente aleatória")):
     # Contar a ocorrência dos nomes
     nomes = [cliente["nome"] for cliente in clientes]
     nome_counter = Counter(nomes)
-
-    # Encontrar nomes repetidos
-    #nomes_repetidos = {nome: count for nome, count in nome_counter.items() if count > 1}
 
     # Deletar clientes com nomes repetidos
     clientes_unicos = []
@@ -104,10 +100,10 @@ def vendas(seed: int = Path(..., description="Semente aleatória")):
 
     # Emparelhando os produtos com seus valores únicos
     product_values = list(zip(prods, prices))
-   
+
     # Contar a ocorrência dos nomes dos produtos
     produtos = [produto[0] for produto in product_values]
-    #produto_counter = Counter(produtos)
+    # produto_counter = Counter(produtos)
 
     # Criar uma nova lista com produtos únicos
     produtos_vistos = set()
@@ -117,7 +113,6 @@ def vendas(seed: int = Path(..., description="Semente aleatória")):
         if produto[0] not in produtos_vistos:
             produtos_vistos.add(produto[0])
             produtos_unicos.append(produto)
-
 
     random.seed()
 
@@ -164,25 +159,23 @@ def vendas(seed: int = Path(..., description="Semente aleatória")):
         if compra['cliente'] is None:
             compra['cliente'] = {'id': None, 'nome': None}
 
-
     formas_pagamento = ['PIX', 'dinheiro', 'crédito', 'débito']
 
     for compra in compras:
         forma_pagamento = choice(formas_pagamento)
         compra['meio'] = forma_pagamento
 
-
     for compra in compras:
         transaction_id = str(uuid.uuid4())
         compra['transaction_id'] = transaction_id
 
+    return {"vendas": compras}
 
-    return {"vendas":compras}
 
-@app.get('/clientes/{seed}/{quantidade}')  
+@app.get('/clientes/{seed}/{quantidade}')
 def clientes(seed: int = Path(..., description="Semente aleatória"),
-    quantidade: int = Path(..., description="Número de clientes a serem gerados")): 
-    
+    quantidade: int = Path(..., description="Número de clientes a serem gerados")):
+
     SEED = seed
 
     # Inicializando Faker com localidade pt_BR
@@ -217,9 +210,6 @@ def clientes(seed: int = Path(..., description="Semente aleatória"),
     nomes = [cliente["nome"] for cliente in clientes]
     nome_counter = Counter(nomes)
 
-    # Encontrar nomes repetidos
-    #nomes_repetidos = {nome: count for nome, count in nome_counter.items() if count > 1}
-
     # Deletar clientes com nomes repetidos
     clientes_unicos = []
     nomes_vistos = set()
@@ -228,7 +218,6 @@ def clientes(seed: int = Path(..., description="Semente aleatória"),
         if cliente["nome"] not in nomes_vistos:
             clientes_unicos.append(cliente)
             nomes_vistos.add(cliente["nome"])
-
 
     return {"clientes": clientes_unicos}
 
@@ -245,7 +234,7 @@ def itens(seed: int = Path(..., description="Semente aleatória"),
     Faker.seed(SEED)
 
     random.seed(SEED)
-    
+
     # Gerando n produtos únicos de duas palavras
     prods = []
     for _ in range(quantidade):
@@ -255,9 +244,9 @@ def itens(seed: int = Path(..., description="Semente aleatória"),
         prods.append(prod_combined)
 
     # set para garantir a unicidade
-    prices = set()  
+    prices = set()
 
-    # Gerando 800 valores únicos    
+    # Gerando 800 valores únicos
     while len(prices) < quantidade:
         # Gerando um preço aleatório entre 0,99 e 50 reais com duas casas decimais
         price = fake.pyfloat(left_digits=3, right_digits=2, positive=True, min_value=0.99, max_value=150)
@@ -272,7 +261,6 @@ def itens(seed: int = Path(..., description="Semente aleatória"),
 
     # Contar a ocorrência dos nomes dos produtos
     produtos = [produto["item"] for produto in product_values]
-    #produto_counter = Counter(produtos)
 
     # Criar uma nova lista com produtos únicos (primeira ocorrência)
     produtos_vistos = set()
