@@ -1,11 +1,10 @@
 from fastapi import FastAPI, Path
 
-from typing import List, Dict
+
 from collections import Counter
 from faker import Faker
 import random
 from random import choice
-import json
 from datetime import datetime
 import pytz
 import uuid
@@ -72,7 +71,7 @@ def vendas(seed: int = Path(..., description="Semente aleatória")):
     nome_counter = Counter(nomes)
 
     # Encontrar nomes repetidos
-    nomes_repetidos = {nome: count for nome, count in nome_counter.items() if count > 1}
+    #nomes_repetidos = {nome: count for nome, count in nome_counter.items() if count > 1}
 
     # Deletar clientes com nomes repetidos
     clientes_unicos = []
@@ -108,7 +107,7 @@ def vendas(seed: int = Path(..., description="Semente aleatória")):
    
     # Contar a ocorrência dos nomes dos produtos
     produtos = [produto[0] for produto in product_values]
-    produto_counter = Counter(produtos)
+    #produto_counter = Counter(produtos)
 
     # Criar uma nova lista com produtos únicos
     produtos_vistos = set()
@@ -219,7 +218,7 @@ def clientes(seed: int = Path(..., description="Semente aleatória"),
     nome_counter = Counter(nomes)
 
     # Encontrar nomes repetidos
-    nomes_repetidos = {nome: count for nome, count in nome_counter.items() if count > 1}
+    #nomes_repetidos = {nome: count for nome, count in nome_counter.items() if count > 1}
 
     # Deletar clientes com nomes repetidos
     clientes_unicos = []
@@ -273,7 +272,7 @@ def itens(seed: int = Path(..., description="Semente aleatória"),
 
     # Contar a ocorrência dos nomes dos produtos
     produtos = [produto["item"] for produto in product_values]
-    produto_counter = Counter(produtos)
+    #produto_counter = Counter(produtos)
 
     # Criar uma nova lista com produtos únicos (primeira ocorrência)
     produtos_vistos = set()
