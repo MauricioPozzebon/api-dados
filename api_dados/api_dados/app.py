@@ -20,10 +20,11 @@ O *endpoint* **/vendas** deve ser usado observando o seguinte cenário de negóc
 - Clientes registrados: 200
 - Compras de clientes registrados: 40%
 - Ítens registrados: 1200
+- Categorias : Açougue, Frios e laticínios, Adega e bebidas, Higiene e limpeza, Hortifruti e mercearia, Padaria, Enlatados, Cereais
 
 A *seed* fixa a base de clientes, itens e preços; a cesta é gerada de forma aleatória.
 
-Os *endpoints* **/clientes** e **/itens** geram uma base aleatória de clientes + id e itens + preço. 
+Os *endpoints* **/clientes** e **/itens** geram uma base aleatória de clientes + id e itens + preço + categoria + estoque. 
 
 
 
@@ -65,18 +66,26 @@ def vendas(seed: int = Path(..., description="Semente aleatória")):
         }
         clientes.append(cliente)
 
-    # Contar a ocorrência dos nomes
-    nomes = [cliente["nome"] for cliente in clientes]
-    nome_counter = Counter(nomes)
-
-    # Deletar clientes com nomes repetidos
-    clientes_unicos = []
+    # Filtrar clientes para garantir unicidade dos nomes
     nomes_vistos = set()
+    clientes_unicos = []
 
     for cliente in clientes:
         if cliente["nome"] not in nomes_vistos:
-            clientes_unicos.append(cliente)
             nomes_vistos.add(cliente["nome"])
+            clientes_unicos.append(cliente)
+
+    # Lista de categorias
+    categorias = [
+        "Açougue",
+        "Frios e laticínios",
+        "Adega e bebidas",
+        "Higiene e limpeza",
+        "Hortifruti e mercearia",
+        "Padaria",
+        "Enlatados",
+        "Cereais"
+    ]
 
     # Gerando 1200 produtos únicos de duas palavras
     prods = []
@@ -98,20 +107,20 @@ def vendas(seed: int = Path(..., description="Semente aleatória")):
     prices = list(prices)
     random.shuffle(prices)
 
-    # Emparelhando os produtos com seus valores únicos
-    product_values = list(zip(prods, prices))
-
-    # Contar a ocorrência dos nomes dos produtos
-    produtos = [produto[0] for produto in product_values]
-    # produto_counter = Counter(produtos)
+    # Emparelhando os produtos com seus valores únicos e categorias aleatórias
+    product_values = [{
+        "item": prods[i], 
+        "preço": prices[i], 
+        "categoria": random.choice(categorias)
+    } for i in range(len(prods))]
 
     # Criar uma nova lista com produtos únicos
     produtos_vistos = set()
     produtos_unicos = []
 
     for produto in product_values:
-        if produto[0] not in produtos_vistos:
-            produtos_vistos.add(produto[0])
+        if produto["item"] not in produtos_vistos:
+            produtos_vistos.add(produto["item"])
             produtos_unicos.append(produto)
 
     random.seed()
@@ -124,7 +133,7 @@ def vendas(seed: int = Path(..., description="Semente aleatória")):
             # Selecionando produtos únicos aleatoriamente para a compra
             produtos_comprados = random.sample(produtos_unicos, num_produtos)
             # Calculando o valor total da compra
-            total_valor = sum(value for _, value in produtos_comprados)
+            total_valor = sum(produto['preço'] for produto in produtos_comprados)
             # Verificando se o valor total está entre 0.99 e 200 reais
             if 0.99 <= total_valor <= 200:
                 return produtos_comprados
@@ -135,7 +144,7 @@ def vendas(seed: int = Path(..., description="Semente aleatória")):
     for _ in range(num_compras):
         compra = gerar_compra_valida()
         # Criando uma lista de dicionários para a compra
-        compra_formatada = [{'item': prod, 'preço': float(f'{value:.2f}')} for prod, value in compra]
+        compra_formatada = [{'item': prod['item'], 'preço': float(f'{prod["preço"]:.2f}'), 'categoria': prod['categoria']} for prod in compra]
         # Obtendo o horário atual
         timezone_brasilia = pytz.timezone('America/Sao_Paulo')
         horario_atual_brasilia = datetime.now(timezone_brasilia).isoformat()
@@ -162,7 +171,7 @@ def vendas(seed: int = Path(..., description="Semente aleatória")):
     formas_pagamento = ['PIX', 'dinheiro', 'crédito', 'débito']
 
     for compra in compras:
-        forma_pagamento = choice(formas_pagamento)
+        forma_pagamento = random.choice(formas_pagamento)
         compra['meio'] = forma_pagamento
 
     for compra in compras:
@@ -224,8 +233,7 @@ def clientes(seed: int = Path(..., description="Semente aleatória"),
 
 @app.get('/itens/{seed}/{quantidade}')
 def itens(seed: int = Path(..., description="Semente aleatória"),
-    quantidade: int = Path(..., description="Número de itens a serem gerados")
-):
+          quantidade: int = Path(..., description="Número de itens a serem gerados")):
     # Definindo a seed para garantir resultados replicáveis
     SEED = seed
 
@@ -235,6 +243,18 @@ def itens(seed: int = Path(..., description="Semente aleatória"),
 
     random.seed(SEED)
 
+    # Lista de categorias
+    categorias = [
+        "Açougue",
+        "Frios e laticínios",
+        "Adega e bebidas",
+        "Higiene e limpeza",
+        "Hortifruti e mercearia",
+        "Padaria",
+        "Enlatados",
+        "Cereais"
+    ]
+
     # Gerando n produtos únicos de duas palavras
     prods = []
     for _ in range(quantidade):
@@ -243,12 +263,12 @@ def itens(seed: int = Path(..., description="Semente aleatória"),
         prod_combined = ' '.join(prod)
         prods.append(prod_combined)
 
-    # set para garantir a unicidade
+    # Set para garantir a unicidade
     prices = set()
 
-    # Gerando 800 valores únicos
+    # Gerando valores únicos para o preço
     while len(prices) < quantidade:
-        # Gerando um preço aleatório entre 0,99 e 50 reais com duas casas decimais
+        # Gerando um preço aleatório entre 0,99 e 150 reais com duas casas decimais
         price = fake.pyfloat(left_digits=3, right_digits=2, positive=True, min_value=0.99, max_value=150)
         prices.add(price)
 
@@ -256,8 +276,13 @@ def itens(seed: int = Path(..., description="Semente aleatória"),
     prices = list(prices)
     random.shuffle(prices)
 
-    # Emparelhando os produtos com seus valores únicos
-    product_values = [{"item": prods[i], "preço": prices[i]} for i in range(len(prods))]
+    # Emparelhando os produtos com seus valores únicos, categorias e estoque aleatórios
+    product_values = [{
+        "item": prods[i], 
+        "preço": prices[i], 
+        "categoria": random.choice(categorias),
+        "estoque": random.randint(1, 50)  # Gerando valor de estoque entre 1 e 50
+    } for i in range(len(prods))]
 
     # Contar a ocorrência dos nomes dos produtos
     produtos = [produto["item"] for produto in product_values]
