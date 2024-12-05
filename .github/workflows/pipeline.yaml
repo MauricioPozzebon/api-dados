@@ -3,7 +3,7 @@ on: [push, pull_request]
 
 jobs: 
   test:
-    runs-on: ubuntu-latest5
+    runs-on: ubuntu-latest
 
     steps:
       - name: Instalar Python
