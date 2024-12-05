@@ -5,7 +5,7 @@ jobs:
   test:
     runs-on: ubuntu-latest5
 
-    steps: :
+    steps:
       - name: Instalar Python
         uses: actions/setup-python@v5
         with: 
